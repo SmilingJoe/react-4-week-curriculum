@@ -581,3 +581,356 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 - Vite provides dev server with HMR (Hot Module Replacement)
 - Similar to nodemon auto-restart, but for frontend
 - For full-stack, you'd run both Express (backend) and Vite (frontend)
+
+---
+
+## Solutions to Daily Assignments
+
+### Solution to Problem 1: Create a Profile Card Component
+
+```jsx
+// ProfileCard.jsx
+function ProfileCard({ 
+  name, 
+  title, 
+  email, 
+  avatarUrl, 
+  bio 
+}) {
+  // Handle missing props with defaults or conditional rendering
+  const displayAvatar = avatarUrl || 'https://via.placeholder.com/150';
+  
+  return (
+    <article className="profile-card">
+      <div className="profile-header">
+        <img 
+          src={displayAvatar} 
+          alt={`${name}'s avatar`}
+          className="profile-avatar"
+        />
+        <div className="profile-info">
+          <h2 className="profile-name">{name || 'Anonymous User'}</h2>
+          <h3 className="profile-title">{title || 'No title'}</h3>
+        </div>
+      </div>
+      
+      <div className="profile-contact">
+        <a href={`mailto:${email}`} className="profile-email">
+          {email}
+        </a>
+      </div>
+      
+      {bio && (
+        <div className="profile-bio">
+          <p>{bio}</p>
+        </div>
+      )}
+    </article>
+  );
+}
+
+// CSS styles (inline for demonstration)
+const styles = {
+  profileCard: {
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    padding: '20px',
+    maxWidth: '400px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  },
+  profileHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '15px'
+  },
+  profileAvatar: {
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    marginRight: '15px'
+  },
+  profileName: {
+    margin: '0 0 5px 0',
+    fontSize: '24px'
+  },
+  profileTitle: {
+    margin: 0,
+    fontSize: '16px',
+    color: '#666'
+  },
+  profileEmail: {
+    color: '#007bff',
+    textDecoration: 'none'
+  },
+  profileBio: {
+    marginTop: '15px',
+    padding: '10px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '4px'
+  }
+};
+
+// Usage example
+function App() {
+  return (
+    <div>
+      <ProfileCard
+        name="Jane Doe"
+        title="Senior Software Engineer"
+        email="jane.doe@example.com"
+        avatarUrl="https://i.pravatar.cc/150?img=1"
+        bio="Passionate about building scalable web applications and mentoring junior developers."
+      />
+    </div>
+  );
+}
+
+export default ProfileCard;
+```
+
+**Key Points:**
+- Uses semantic HTML (`article`, `h2`, `h3`)
+- Handles missing optional props (avatar with placeholder, conditional bio rendering)
+- Props are properly destructured
+- Email is a clickable mailto link
+- Component is purely functional
+
+---
+
+### Solution to Problem 2: Build a Simple Navigation Component
+
+```jsx
+// Navigation.jsx
+function Navigation({ items = [], activeId }) {
+  // Handle empty array gracefully
+  if (!items || items.length === 0) {
+    return <nav className="navigation">No navigation items</nav>;
+  }
+
+  return (
+    <nav className="navigation">
+      <ul className="nav-list">
+        {items.map((item) => {
+          const isActive = item.id === activeId;
+          
+          return (
+            <li 
+              key={item.id} 
+              className={`nav-item ${isActive ? 'active' : ''}`}
+            >
+              <a 
+                href={item.url} 
+                className={`nav-link ${isActive ? 'active' : ''}`}
+              >
+                {item.label}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+// CSS styles
+const navStyles = `
+  .navigation {
+    background: #333;
+    padding: 10px;
+  }
+  
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .nav-item {
+    display: inline-block;
+  }
+  
+  .nav-link {
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+  
+  .nav-link:hover {
+    background: #555;
+  }
+  
+  .nav-link.active {
+    background: #007bff;
+    font-weight: bold;
+  }
+`;
+
+// Usage example
+function App() {
+  const navItems = [
+    { id: 'home', label: 'Home', url: '/' },
+    { id: 'about', label: 'About', url: '/about' },
+    { id: 'services', label: 'Services', url: '/services' },
+    { id: 'contact', label: 'Contact', url: '/contact' }
+  ];
+
+  return (
+    <div>
+      <Navigation items={navItems} activeId="home" />
+      {/* Empty navigation example */}
+      <Navigation items={[]} />
+    </div>
+  );
+}
+
+export default Navigation;
+```
+
+**Key Points:**
+- Each item has a unique `key` prop (item.id)
+- Uses `.map()` for list rendering
+- Active link highlighted with conditional className
+- Handles empty array gracefully
+- Default parameter for items array
+
+---
+
+### Solution to Problem 3: Create a Conditional Rendering Dashboard
+
+```jsx
+// Dashboard.jsx
+function Dashboard({ isLoading, isAuthenticated, userName }) {
+  // Early return for loading state
+  if (isLoading) {
+    return (
+      <div className="dashboard loading">
+        <div className="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // Conditional rendering based on authentication
+  return (
+    <div className="dashboard">
+      {isAuthenticated ? (
+        <div className="dashboard-authenticated">
+          <h1>Welcome, {userName}!</h1>
+          <div className="dashboard-content">
+            <div className="card">
+              <h3>Your Stats</h3>
+              <p>Projects: 12</p>
+              <p>Tasks: 45</p>
+            </div>
+            <div className="card">
+              <h3>Recent Activity</h3>
+              <p>Last login: Today at 9:00 AM</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="dashboard-unauthenticated">
+          <h2>Please log in</h2>
+          <p>You need to be authenticated to view this dashboard.</p>
+          <button className="login-button">Log In</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// CSS styles
+const dashboardStyles = `
+  .dashboard {
+    padding: 20px;
+    min-height: 400px;
+  }
+  
+  .dashboard.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .dashboard-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  .card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .login-button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .login-button:hover {
+    background: #0056b3;
+  }
+`;
+
+// Usage examples
+function App() {
+  return (
+    <div>
+      {/* Loading state */}
+      <Dashboard isLoading={true} />
+      
+      {/* Authenticated state */}
+      <Dashboard 
+        isLoading={false} 
+        isAuthenticated={true} 
+        userName="John Doe" 
+      />
+      
+      {/* Unauthenticated state */}
+      <Dashboard 
+        isLoading={false} 
+        isAuthenticated={false} 
+      />
+    </div>
+  );
+}
+
+export default Dashboard;
+```
+
+**Key Points:**
+- Early return pattern for loading state
+- Ternary operator for authenticated vs unauthenticated
+- All state combinations handled correctly
+- Clear, readable conditional logic
+- No unnecessary re-renders (pure component logic)
+- Uses logical && for optional content within authenticated view

@@ -734,3 +734,484 @@ export default ConditionalEffects;
 - Early return from effect if condition not met
 - Cleanup only runs if effect body ran
 - Useful for conditional subscriptions or connections
+
+---
+
+## Solutions to Daily Assignments
+
+### Solution to Problem 1: Document Title Updater
+
+```jsx
+// DocumentTitleUpdater.jsx
+import { useState, useEffect } from 'react';
+
+function DocumentTitleUpdater() {
+  const [pageName, setPageName] = useState('Home');
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  // Update document title
+  useEffect(() => {
+    const titleParts = [];
+    
+    if (notificationCount > 0) {
+      titleParts.push(`(${notificationCount})`);
+    }
+    
+    titleParts.push(pageName);
+    titleParts.push('My App');
+    
+    document.title = titleParts.join(' | ');
+
+    // Cleanup: reset title when component unmounts
+    return () => {
+      document.title = 'My App';
+    };
+  }, [pageName, notificationCount]);
+
+  const pages = ['Home', 'Dashboard', 'Profile', 'Settings'];
+
+  return (
+    <div className="title-updater">
+      <h2>Document Title Updater</h2>
+      
+      <div className="page-selector">
+        <label>Select Page: </label>
+        <select value={pageName} onChange={(e) => setPageName(e.target.value)}>
+          {pages.map(page => (
+            <option key={page} value={page}>{page}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="notification-controls">
+        <p>Notifications: {notificationCount}</p>
+        <button onClick={() => setNotificationCount(prev => prev + 1)}>
+          Add Notification
+        </button>
+        <button onClick={() => setNotificationCount(0)}>
+          Clear Notifications
+        </button>
+      </div>
+
+      <p>Current title: {document.title}</p>
+    </div>
+  );
+}
+
+export default DocumentTitleUpdater;
+```
+
+---
+
+### Solution to Problem 2: Real-Time Clock Component
+
+```jsx
+// RealtimeClock.jsx
+import { useState, useEffect } from 'react';
+
+function RealtimeClock() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isRunning, setIsRunning] = useState(true);
+  const [mountTime] = useState(new Date());
+
+  useEffect(() => {
+    let intervalId = null;
+
+    if (isRunning) {
+      intervalId = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000);
+    }
+
+    // Cleanup function
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isRunning]);
+
+  const formatTime = (date) => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  const getElapsedTime = () => {
+    const elapsed = Math.floor((currentTime - mountTime) / 1000);
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="realtime-clock">
+      <h2>Real-Time Clock</h2>
+      
+      <div className="clock-display">
+        <div className="current-time">
+          <h3>Current Time</h3>
+          <p style={{ fontSize: '48px', fontFamily: 'monospace' }}>
+            {formatTime(currentTime)}
+          </p>
+        </div>
+
+        <div className="elapsed-time">
+          <h3>Elapsed Since Mount</h3>
+          <p style={{ fontSize: '32px', fontFamily: 'monospace' }}>
+            {getElapsedTime()}
+          </p>
+        </div>
+      </div>
+
+      <div className="controls">
+        <button onClick={() => setIsRunning(!isRunning)}>
+          {isRunning ? 'Stop' : 'Start'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default RealtimeClock;
+```
+
+---
+
+### Solution to Problem 3: Window Resize Tracker
+
+```jsx
+// WindowResizeTracker.jsx
+import { useState, useEffect } from 'react';
+
+function WindowResizeTracker() {
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
+  useEffect(() => {
+    let timeoutId = null;
+
+    // Debounced resize handler
+    const handleResize = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      timeoutId = setTimeout(() => {
+        setDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+      }, 200); // Debounce by 200ms
+    };
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const getDeviceCategory = () => {
+    if (dimensions.width < 768) return 'Mobile';
+    if (dimensions.width < 1024) return 'Tablet';
+    return 'Desktop';
+  };
+
+  const getCategoryColor = () => {
+    const category = getDeviceCategory();
+    if (category === 'Mobile') return '#ff9800';
+    if (category === 'Tablet') return '#2196f3';
+    return '#4caf50';
+  };
+
+  return (
+    <div className="resize-tracker">
+      <h2>Window Resize Tracker</h2>
+      
+      <div className="dimensions">
+        <p>Width: <strong>{dimensions.width}px</strong></p>
+        <p>Height: <strong>{dimensions.height}px</strong></p>
+      </div>
+
+      <div 
+        className="device-category"
+        style={{
+          padding: '20px',
+          backgroundColor: getCategoryColor(),
+          color: 'white',
+          borderRadius: '8px',
+          marginTop: '20px'
+        }}
+      >
+        <h3>Device Category: {getDeviceCategory()}</h3>
+      </div>
+
+      <div className="breakpoints">
+        <p><small>Mobile: &lt; 768px | Tablet: 768-1023px | Desktop: ≥ 1024px</small></p>
+      </div>
+    </div>
+  );
+}
+
+export default WindowResizeTracker;
+```
+
+---
+
+### Solution to Problem 4: Data Fetcher with Loading States
+
+```jsx
+// DataFetcher.jsx
+import { useState, useEffect } from 'react';
+
+function DataFetcher() {
+  const [userId, setUserId] = useState(1);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    const fetchUser = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `https://jsonplaceholder.typicode.com/users/${userId}`,
+          { signal: abortController.signal }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUser(data);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError(err.message);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUser();
+
+    // Cleanup: cancel request if userId changes or component unmounts
+    return () => {
+      abortController.abort();
+    };
+  }, [userId]);
+
+  const handlePrevious = () => {
+    if (userId > 1) {
+      setUserId(userId - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (userId < 10) {
+      setUserId(userId + 1);
+    }
+  };
+
+  return (
+    <div className="data-fetcher">
+      <h2>User Data Fetcher</h2>
+
+      <div className="controls">
+        <button onClick={handlePrevious} disabled={userId === 1}>
+          Previous
+        </button>
+        <span>User ID: {userId}</span>
+        <button onClick={handleNext} disabled={userId === 10}>
+          Next
+        </button>
+      </div>
+
+      {loading && (
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>Loading user data...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="error">
+          <h3>Error</h3>
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && user && (
+        <div className="user-data">
+          <h3>{user.name}</h3>
+          <p><strong>Username:</strong> {user.username}</p>
+          <p><strong>Email:</strong> {user.email}</p>
+          <p><strong>Phone:</strong> {user.phone}</p>
+          <p><strong>Website:</strong> {user.website}</p>
+          <p><strong>Company:</strong> {user.company.name}</p>
+          <p><strong>Address:</strong> {user.address.street}, {user.address.city}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default DataFetcher;
+```
+
+---
+
+### Solution to Problem 5: Local Storage Sync
+
+```jsx
+// LocalStorageSettings.jsx
+import { useState, useEffect } from 'react';
+
+function LocalStorageSettings() {
+  const [settings, setSettings] = useState(() => {
+    // Load from localStorage on initial mount
+    try {
+      const saved = localStorage.getItem('appSettings');
+      return saved ? JSON.parse(saved) : {
+        theme: 'light',
+        language: 'en',
+        notifications: true
+      };
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      return {
+        theme: 'light',
+        language: 'en',
+        notifications: true
+      };
+    }
+  });
+
+  const [showSaved, setShowSaved] = useState(false);
+
+  // Sync to localStorage whenever settings change
+  useEffect(() => {
+    try {
+      localStorage.setItem('appSettings', JSON.stringify(settings));
+      
+      // Show "Settings saved!" message
+      setShowSaved(true);
+      const timer = setTimeout(() => {
+        setShowSaved(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  }, [settings]);
+
+  const updateSetting = (key, value) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const resetToDefaults = () => {
+    const defaults = {
+      theme: 'light',
+      language: 'en',
+      notifications: true
+    };
+    setSettings(defaults);
+    try {
+      localStorage.removeItem('appSettings');
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+  };
+
+  return (
+    <div className="settings-panel">
+      <h2>Settings</h2>
+
+      {showSaved && (
+        <div className="save-notification">
+          ✓ Settings saved!
+        </div>
+      )}
+
+      <div className="setting-group">
+        <label htmlFor="theme">Theme:</label>
+        <select
+          id="theme"
+          value={settings.theme}
+          onChange={(e) => updateSetting('theme', e.target.value)}
+        >
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="auto">Auto</option>
+        </select>
+      </div>
+
+      <div className="setting-group">
+        <label htmlFor="language">Language:</label>
+        <select
+          id="language"
+          value={settings.language}
+          onChange={(e) => updateSetting('language', e.target.value)}
+        >
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+        </select>
+      </div>
+
+      <div className="setting-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.notifications}
+            onChange={(e) => updateSetting('notifications', e.target.checked)}
+          />
+          Enable Notifications
+        </label>
+      </div>
+
+      <button onClick={resetToDefaults} className="reset-button">
+        Reset to Defaults
+      </button>
+
+      <div className="settings-preview">
+        <h3>Current Settings (JSON)</h3>
+        <pre>{JSON.stringify(settings, null, 2)}</pre>
+      </div>
+    </div>
+  );
+}
+
+export default LocalStorageSettings;
+```
+
+**Key Points:**
+- Lazy initialization loads from localStorage on mount
+- useEffect syncs changes to localStorage
+- Try-catch blocks handle localStorage unavailability
+- "Settings saved!" message uses state + setTimeout with cleanup
+- Reset functionality clears localStorage
+- All requirements met with proper error handling

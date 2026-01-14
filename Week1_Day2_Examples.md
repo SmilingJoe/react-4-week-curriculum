@@ -901,3 +901,544 @@ export default FunctionalUpdates;
 - When new state depends on previous state, use functional updates
 - This ensures you're working with the most current state value
 - Especially important when batching multiple updates
+
+---
+
+## Solutions to Daily Assignments
+
+### Solution to Problem 1: Interactive Counter with Multiple Operations
+
+```jsx
+// EnhancedCounter.jsx
+import { useState } from 'react';
+
+function EnhancedCounter() {
+  const [count, setCount] = useState(0);
+  const [history, setHistory] = useState([]);
+
+  const addToHistory = (operation, newValue) => {
+    const historyEntry = {
+      operation,
+      value: newValue,
+      timestamp: new Date().toLocaleTimeString()
+    };
+    
+    setHistory(prev => [...prev, historyEntry].slice(-5)); // Keep last 5
+  };
+
+  const increment = () => {
+    setCount(prev => {
+      const newValue = prev + 1;
+      addToHistory('Increment', newValue);
+      return newValue;
+    });
+  };
+
+  const decrement = () => {
+    setCount(prev => {
+      const newValue = prev - 1;
+      addToHistory('Decrement', newValue);
+      return newValue;
+    });
+  };
+
+  const incrementByFive = () => {
+    setCount(prev => {
+      const newValue = prev + 5;
+      addToHistory('Increment by 5', newValue);
+      return newValue;
+    });
+  };
+
+  const reset = () => {
+    setCount(0);
+    addToHistory('Reset', 0);
+  };
+
+  // Conditional styling
+  const getCountColor = () => {
+    if (count < 0) return 'red';
+    if (count > 10) return 'green';
+    return 'black';
+  };
+
+  return (
+    <div className="enhanced-counter">
+      <h2 style={{ color: getCountColor(), fontSize: '48px' }}>
+        Count: {count}
+      </h2>
+
+      <div className="button-group">
+        <button onClick={increment}>Increment (+1)</button>
+        <button 
+          onClick={decrement} 
+          disabled={count === 0}
+          style={{ opacity: count === 0 ? 0.5 : 1 }}
+        >
+          Decrement (-1)
+        </button>
+        <button onClick={incrementByFive}>Increment (+5)</button>
+        <button onClick={reset}>Reset</button>
+      </div>
+
+      <div className="history">
+        <h3>History (Last 5 Operations)</h3>
+        {history.length === 0 ? (
+          <p>No operations yet</p>
+        ) : (
+          <ul>
+            {history.map((entry, index) => (
+              <li key={index}>
+                {entry.timestamp}: {entry.operation} → {entry.value}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default EnhancedCounter;
+```
+
+---
+
+### Solution to Problem 2: Real-Time Form Validator
+
+```jsx
+// RegistrationForm.jsx
+import { useState } from 'react';
+
+function RegistrationForm() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Validation functions
+  const validateUsername = (value) => {
+    if (value.length < 3) return 'Username must be at least 3 characters';
+    if (value.length > 20) return 'Username must be less than 20 characters';
+    if (!/^[a-zA-Z0-9]+$/.test(value)) return 'Username must be alphanumeric only';
+    return '';
+  };
+
+  const validateEmail = (value) => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
+    return '';
+  };
+
+  const validatePassword = (value) => {
+    if (value.length < 8) return 'Password must be at least 8 characters';
+    if (!/\d/.test(value)) return 'Password must include a number';
+    if (!/[!@#$%^&*]/.test(value)) return 'Password must include a special character';
+    return '';
+  };
+
+  const validateConfirmPassword = (value) => {
+    if (value !== formData.password) return 'Passwords do not match';
+    return '';
+  };
+
+  const validators = {
+    username: validateUsername,
+    email: validateEmail,
+    password: validatePassword,
+    confirmPassword: validateConfirmPassword
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Real-time validation
+    if (touched[name]) {
+      const error = validators[name](value);
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validators[name](value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const isFormValid = () => {
+    return Object.keys(formData).every(key => {
+      const value = formData[key];
+      return value && !validators[key](value);
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (isFormValid()) {
+      console.log('Form submitted:', formData);
+      // Reset form
+      setFormData({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
+      setErrors({});
+      setTouched({});
+      alert('Registration successful!');
+    }
+  };
+
+  const getFieldClassName = (fieldName) => {
+    if (!touched[fieldName]) return 'form-input';
+    return errors[fieldName] ? 'form-input error' : 'form-input valid';
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="registration-form">
+      <h2>Register</h2>
+
+      <div className="form-group">
+        <label htmlFor="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          value={formData.username}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={getFieldClassName('username')}
+        />
+        {touched.username && errors.username && (
+          <span className="error-message">{errors.username}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={getFieldClassName('email')}
+        />
+        {touched.email && errors.email && (
+          <span className="error-message">{errors.email}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={getFieldClassName('password')}
+        />
+        {touched.password && errors.password && (
+          <span className="error-message">{errors.password}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={getFieldClassName('confirmPassword')}
+        />
+        {touched.confirmPassword && errors.confirmPassword && (
+          <span className="error-message">{errors.confirmPassword}</span>
+        )}
+      </div>
+
+      <button type="submit" disabled={!isFormValid()}>
+        Submit
+      </button>
+    </form>
+  );
+}
+
+export default RegistrationForm;
+```
+
+---
+
+### Solution to Problem 3: Dynamic Task List Manager
+
+```jsx
+// TaskListManager.jsx
+import { useState } from 'react';
+
+function TaskListManager() {
+  const [tasks, setTasks] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
+
+  const addTask = () => {
+    if (inputValue.trim()) {
+      const newTask = {
+        id: Date.now(),
+        text: inputValue,
+        completed: false
+      };
+      setTasks(prev => [...prev, newTask]);
+      setInputValue('');
+    }
+  };
+
+  const toggleTask = (id) => {
+    setTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const deleteTask = (id) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  };
+
+  const clearCompleted = () => {
+    setTasks(prev => prev.filter(task => !task.completed));
+  };
+
+  const getFilteredTasks = () => {
+    switch (filter) {
+      case 'active':
+        return tasks.filter(task => !task.completed);
+      case 'completed':
+        return tasks.filter(task => task.completed);
+      default:
+        return tasks;
+    }
+  };
+
+  const filteredTasks = getFilteredTasks();
+  const completedCount = tasks.filter(task => task.completed).length;
+
+  return (
+    <div className="task-manager">
+      <h2>Task List Manager</h2>
+
+      <div className="input-section">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && addTask()}
+          placeholder="Add a new task..."
+        />
+        <button onClick={addTask}>Add Task</button>
+      </div>
+
+      <div className="filter-section">
+        <button 
+          onClick={() => setFilter('all')}
+          className={filter === 'all' ? 'active' : ''}
+        >
+          All
+        </button>
+        <button 
+          onClick={() => setFilter('active')}
+          className={filter === 'active' ? 'active' : ''}
+        >
+          Active
+        </button>
+        <button 
+          onClick={() => setFilter('completed')}
+          className={filter === 'completed' ? 'active' : ''}
+        >
+          Completed
+        </button>
+      </div>
+
+      <ul className="task-list">
+        {filteredTasks.map(task => (
+          <li key={task.id} className={task.completed ? 'completed' : ''}>
+            <span 
+              onClick={() => toggleTask(task.id)}
+              style={{ 
+                textDecoration: task.completed ? 'line-through' : 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {task.text}
+            </span>
+            <button onClick={() => deleteTask(task.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+
+      <div className="stats">
+        <p>Total: {tasks.length} | Completed: {completedCount}</p>
+        <button onClick={clearCompleted} disabled={completedCount === 0}>
+          Clear Completed
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default TaskListManager;
+```
+
+---
+
+### Solution to Problem 4: Parent-Child Communication
+
+```jsx
+// ProductManager.jsx (Parent)
+import { useState } from 'react';
+import ProductCard from './ProductCard';
+import ProductSummary from './ProductSummary';
+
+function ProductManager() {
+  const [products, setProducts] = useState([
+    { id: 1, name: 'Laptop', price: 999.99, quantity: 2 },
+    { id: 2, name: 'Mouse', price: 29.99, quantity: 5 },
+    { id: 3, name: 'Keyboard', price: 79.99, quantity: 3 }
+  ]);
+
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    price: '',
+    quantity: ''
+  });
+
+  const addProduct = () => {
+    if (newProduct.name && newProduct.price && newProduct.quantity) {
+      const product = {
+        id: Date.now(),
+        name: newProduct.name,
+        price: parseFloat(newProduct.price),
+        quantity: parseInt(newProduct.quantity)
+      };
+      setProducts(prev => [...prev, product]);
+      setNewProduct({ name: '', price: '', quantity: '' });
+    }
+  };
+
+  const increaseQuantity = (id) => {
+    setProducts(prev => prev.map(product =>
+      product.id === id 
+        ? { ...product, quantity: product.quantity + 1 }
+        : product
+    ));
+  };
+
+  const decreaseQuantity = (id) => {
+    setProducts(prev => prev.map(product =>
+      product.id === id && product.quantity > 0
+        ? { ...product, quantity: product.quantity - 1 }
+        : product
+    ));
+  };
+
+  const removeProduct = (id) => {
+    setProducts(prev => prev.filter(product => product.id !== id));
+  };
+
+  return (
+    <div className="product-manager">
+      <h2>Product Manager</h2>
+
+      <div className="add-product">
+        <input
+          type="text"
+          placeholder="Product Name"
+          value={newProduct.name}
+          onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+        />
+        <input
+          type="number"
+          placeholder="Price"
+          value={newProduct.price}
+          onChange={(e) => setNewProduct(prev => ({ ...prev, price: e.target.value }))}
+        />
+        <input
+          type="number"
+          placeholder="Quantity"
+          value={newProduct.quantity}
+          onChange={(e) => setNewProduct(prev => ({ ...prev, quantity: e.target.value }))}
+        />
+        <button onClick={addProduct}>Add Product</button>
+      </div>
+
+      <ProductSummary products={products} />
+
+      <div className="product-list">
+        {products.map(product => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onIncrease={() => increaseQuantity(product.id)}
+            onDecrease={() => decreaseQuantity(product.id)}
+            onRemove={() => removeProduct(product.id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ProductCard.jsx (Child)
+function ProductCard({ product, onIncrease, onDecrease, onRemove }) {
+  const { name, price, quantity } = product;
+
+  return (
+    <div className="product-card">
+      <h3>{name}</h3>
+      <p>Price: ${price.toFixed(2)}</p>
+      <p>Quantity: {quantity}</p>
+      
+      <div className="button-group">
+        <button onClick={onDecrease} disabled={quantity === 0}>-</button>
+        <button onClick={onIncrease}>+</button>
+        <button onClick={onRemove}>Remove</button>
+      </div>
+    </div>
+  );
+}
+
+// ProductSummary.jsx (Child)
+function ProductSummary({ products }) {
+  const totalItems = products.reduce((sum, product) => sum + product.quantity, 0);
+  const totalValue = products.reduce(
+    (sum, product) => sum + (product.price * product.quantity), 
+    0
+  );
+
+  return (
+    <div className="product-summary">
+      <h3>Summary</h3>
+      <p>Total Items: {totalItems}</p>
+      <p>Total Value: ${totalValue.toFixed(2)}</p>
+    </div>
+  );
+}
+
+export default ProductManager;
+```
+
+**Key Points:**
+- Parent (ProductManager) manages all state
+- Children receive data via props
+- Children communicate up via callback props (onIncrease, onDecrease, onRemove)
+- Props properly destructured in child components
+- Immutable state updates using spread operator and array methods
